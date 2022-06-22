@@ -1,14 +1,14 @@
 import React from "react";
 
-const Header = () => {
+const Header = ({ onAdd, showAdd }) => {
   const handleClick = () => {
-    console.log("clicked");
+    onAdd();
   };
   return (
     <header className="header">
       <h1>Task Tracker</h1>
-      <button onClick={handleClick} className="btn">
-        Add
+      <button style={{backgroundColor: showAdd ? 'red' : 'green'}} onClick={handleClick} className="btn">
+        {showAdd ? "Close" : "Add"}
       </button>
     </header>
   );

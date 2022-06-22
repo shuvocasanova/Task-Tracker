@@ -1,55 +1,77 @@
 import "./App.css";
 
-import React from "react";
+import React, { useEffect } from "react";
 import Header from "./components/Header";
 import Tasks from "./components/Tasks";
 import { useState } from "react";
-
-let tasks1 = [
-  {
-    id: 1,
-    text: "Book a flight",
-    day: "Feb 5th at 2:30pm",
-    reminder: true,
-  },
-  {
-    id: 2,
-    text: "Buy a new car",
-    day: "Feb 6th at 1:00pm",
-    reminder: false,
-  },
-  {
-    id: 3,
-    text: "Buy a new house",
-    day: "Feb 7th at 12:00pm",
-    reminder: true,
-  },
-  {
-    id: 4,
-    text: "Buy a new house",
-    day: "Feb 8th at 12:00pm",
-    reminder: false,
-  },
-  {
-    id: 5,
-    text: "Buy a new house",
-    day: "Feb 9th at 12:00pm",
-    reminder: true,
-  },
-];
+import AddTask from "./components/AddTask";
 
 const App = () => {
-  const [tasks, setTasks] = useState(tasks1);
-  // Delete task
-  const deleteTask = (id) => {
-    setTasks(tasks.filter((task) => task.id !== id));
-  }
+  const [tasks, setTasks] = useState([]);
+  const [showAddTask, setShowAddTask] = useState(false);
 
+  //Add Task
+  const addTask = (task) => {
+    const id = tasks.length + 1;
+    const newTask = { ...task, id };
+    setTasks([...tasks, newTask]);
+  };
+
+  useEffect(() => {
+    const getTasks = async () => {
+      const tasksFromServer = await fetchData();
+      setTasks(tasksFromServer);
+    };
+    getTasks();
+  }, []);
+
+  //Fetch Tasks
+  const fetchData = async () => {
+    const result = await fetch(
+      "https://task-tracker-e3b91-default-rtdb.firebaseio.com/tasks.json",
+      {
+        method: "GET",
+      }
+    );
+    const data = await result.json();
+    return data;
+  };
+
+  // Delete task
+  const deleteTask = async (id) => {
+    await fetch(
+      `https://task-tracker-e3b91-default-rtdb.firebaseio.com/tasks.json`,
+      {
+        method: "DELETE",
+      }
+    );
+    setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  //Toggle reminder
+  const toggleReminder = (id) => {
+    setTasks(
+      tasks.map((task) => {
+        if (task.id === id) {
+          task.reminder = !task.reminder;
+        }
+        return task;
+      })
+    );
+  };
 
   return (
     <div className="container">
-      <Header />
-      <Tasks tasks={tasks} onDelete={deleteTask}/>
+      <Header
+        onAdd={() => setShowAddTask(!showAddTask)}
+        showAdd={showAddTask}
+      />
+      {showAddTask && <AddTask onAdd={addTask} />}
+      {tasks.length > 0 ? (
+        <Tasks tasks={tasks} onDelete={deleteTask} onToggle={toggleReminder} />
+      ) : (
+        "No task to show"
+      )}
     </div>
   );
 };
